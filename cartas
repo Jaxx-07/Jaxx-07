@@ -1,0 +1,96 @@
+
+import turtle
+import random
+import time
+
+# Configurar pantalla
+screen = turtle.Screen()
+screen.title("Juego de Memoria con Turtle")
+screen.bgcolor("white")
+screen.setup(width=600, height=600)
+
+# Crear un objeto turtle para dibujar
+drawer = turtle.Turtle()
+drawer.hideturtle()
+drawer.speed(0)
+
+# Variables del juego
+cards = list(range(1, 9)) * 2  # Cartas duplicadas para crear pares
+random.shuffle(cards)  # Mezcla las cartas
+revealed = [False] * 16  # Estado de cada carta (oculta o revelada)
+score = 0
+first_card = None
+
+# Función para dibujar un rectángulo (carta)
+def draw_rectangle(x, y, width, height, color="black"):
+    drawer.penup()
+    drawer.goto(x, y)
+    drawer.pendown()
+    drawer.color(color)
+    drawer.begin_fill()
+    for _ in range(2):
+        drawer.forward(width)
+        drawer.right(90)
+        drawer.forward(height)
+        drawer.right(90)
+    drawer.end_fill()
+
+# Función para mostrar todas las cartas en una cuadrícula
+def make_grid():
+    drawer.clear()
+    for i in range(16):
+        x = (i % 4) * 100 - 150
+        y = (i // 4) * -100 + 150
+        if not revealed[i]:
+            draw_rectangle(x, y, 80, 80, "blue")
+        else:
+            draw_rectangle(x, y, 80, 80, "white")
+            drawer.penup()
+            drawer.goto(x + 30, y - 50)
+            drawer.pendown()
+            drawer.write(cards[i], align="center", font=("Arial", 24, "normal"))
+
+# Función para manejar la primera carta seleccionada
+def show_first_card(index):
+    global first_card
+    if revealed[index] or first_card is not None:
+        return
+    revealed[index] = True
+    first_card = index
+    make_grid()
+
+# Función para manejar la segunda carta y verificar coincidencia
+def check_match(index):
+    global score, first_card
+    if revealed[index] or first_card is None:
+        return
+    revealed[index] = True
+    make_grid()
+    time.sleep(1)  # Pausa para que el jugador vea ambas cartas
+
+    if cards[first_card] == cards[index]:
+        score += 1
+        print("¡Pareja encontrada! Puntuación:", score)
+    else:
+        revealed[first_card] = False
+        revealed[index] = False
+    first_card = None
+    make_grid()
+
+# Función para manejar los clics del jugador
+def card_click(x, y):
+    column = int((x + 200) // 100)
+    row = int((200 - y) // 100)
+    index = row * 4 + column
+    if 0 <= index < 16:
+        if first_card is None:
+            show_first_card(index)
+        else:
+            check_match(index)
+
+# Configurar eventos de clic
+screen.onclick(card_click)
+
+# Iniciar el juego
+make_grid()
+screen.mainloop()
